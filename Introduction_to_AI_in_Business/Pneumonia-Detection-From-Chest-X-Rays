@@ -18,3 +18,24 @@ Baseline = False
 Dropout = False
 Dropout_lowLR = False
 DenseNet = True
+
+
+
+# Read in the Data
+all_xray_df = pd.read_csv('/data/Data_Entry_2017.csv')
+
+# Convert `Finding Labels` to binary labels for each disease
+all_labels = np.unique(list(chain(*all_xray_df['Finding Labels'].map(lambda x: x.split('|')).tolist())))
+all_labels = [x for x in all_labels if len(x)>0]
+for label in all_labels:
+    if len(label)>1:
+        all_xray_df[label] = all_xray_df['Finding Labels'].map(lambda diseases: 1.0 if label in diseases else 0)
+
+# Create 'path' column for each 'Image Index'
+all_image_paths = {os.path.basename(x): x for x in
+                   glob(os.path.join('/data','images*', '*', '*.png'))}
+all_xray_df['path'] = all_xray_df['Image Index'].map(all_image_paths.get)
+
+# Check the results
+print(f'Images Found: {len(all_image_paths)}, Total Observations: {all_xray_df.shape[0]}')
+all_xray_df.sample(3)
